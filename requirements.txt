@@ -1,0 +1,4 @@
+django
+pandas
+psycopg2-binary
+python-highcharts
