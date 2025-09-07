@@ -1,0 +1,1 @@
+web: gunicorn sugarqube.wsgi:application --workers 4
