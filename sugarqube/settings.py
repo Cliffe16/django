@@ -37,7 +37,7 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'dashboard'
+    'dashboard',
 ]
 
 MIDDLEWARE = [
@@ -74,7 +74,16 @@ WSGI_APPLICATION = 'sugarqube.wsgi.application'
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
 DATABASES = {
-    'default': {
+    'default': {}, # Keep this empty
+    'credentials': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'SugarQubeDB',
+        'USER': 'neondb_owner',
+        'PASSWORD': 'npg_e4BMcECL0UTA',
+        'HOST': 'ep-plain-sound-a89ygh1m-pooler.eastus2.azure.neon.tech',
+        'PORT': '5432',
+    },
+    'sugarprices': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'SugarQubeDB',
         'USER': 'neondb_owner',
@@ -83,6 +92,8 @@ DATABASES = {
         'PORT': '5432',
     }
 }
+
+DATABASE_ROUTERS = ['dashboard.routers.AuthRouter', 'dashboard.routers.SugarPriceRouter']
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators
@@ -119,6 +130,8 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 
 STATIC_URL = 'static/'
+STATICFILES_DIRS = ["/home/cliffe/Downloads/SugarQube/dashboard/static/dashboard"]
+
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/5.2/ref/settings/#default-auto-field
@@ -130,3 +143,17 @@ AUTH_USER_MODEL = 'dashboard.User'
 
 #Redirect logged in users
 LOGIN_REDIRECT_URL = '/'
+
+#Redirect logged out users
+LOGOUT_REDIRECT_URL = '/accounts/login/'
+
+LOGIN_URL = '/accounts/login/'
+
+# Email settings for support tickets
+EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+EMAIL_HOST = 'smtp.mailersend.net'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
+EMAIL_HOST_USER = 'MS_hSlaTI@test-pzkmgq7dv1nl059v.mlsender.net'  
+EMAIL_HOST_PASSWORD = 'mssp.ymJHZRX.pq3enl63wprl2vwr.w45Wvv5'  
+DEFAULT_FROM_EMAIL = 'info@sugarqube.online'

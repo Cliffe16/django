@@ -1,46 +1,181 @@
 {% extends 'base.html' %}
 
 {% block content %}
-  <div class="custom-title">
-    <h1>SugarQube Dashboard</h1>
-  </div>
-  
-  <div class="kpi-container">
-    <div class="kpi-box">
-      <h4>Today's Price</h4>
-      <div class="kpi-value">{{ today_price }}</div>
+<div class="top-banner">
+    <div class="news-label">Weekly News:</div>
+    <div class="scrolling-text-container">
+        Kenya's Ministry of Agriculture has officially gazetted sugar development levy to be levied at 4% of ex-mill price and 4% of Cost Insurance and Freight price for imported sugar
     </div>
-    <div class="kpi-box">
-      <h4>Yesterday's Price</h4>
-      <div class="kpi-value">{{ yesterday_price }}</div>
-    </div>
-    <div class="kpi-box">
-      <h4>% Change</h4>
-      <div class="kpi-value">{{ percentage_change }}%</div>
-    </div>
-  </div>
-  
-  <div id="chart-container" style="width:100%; height:400px; margin-top: 20px;"></div>
-{% endblock %}
+</div>
 
+<main class="container-fluid" style="padding: 20px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; padding-bottom: 10px;">
+        <div>Welcome, <strong>{{ user.username }}</strong></div>
+        <a href="{% url 'logout' %}" class="btn btn-danger btn-sm">
+            Logout <i class="fas fa-right-from-bracket"></i>
+        </a>
+    </div>
+
+    <div class="custom-title">
+        <h2><strong>SugarQube</strong></h2>
+    </div>
+
+    <br>
+
+    <ul class="nav nav-pills mb-3" id="pills-tab" role="tablist">
+        <li class="nav-item">
+            <a class="nav-link active" id="pills-home-tab" data-toggle="pill" href="#pills-home" role="tab">Home</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="pills-markets-tab" data-toggle="pill" href="#pills-markets" role="tab">Markets and Commentary</a>
+        </li>
+        <li class="nav-item">
+            <a class="nav-link" id="pills-trade-tab" data-toggle="pill" href="#pills-trade" role="tab">Trade</a>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="pills-tabContent">
+        <div class="tab-pane fade show active" id="pills-home" role="tabpanel">
+            <div class="kpi-container">
+                <div class="kpi-box"><h4>Today</h4><div class="kpi-value">{{ today_price }}</div></div>
+                <div class="kpi-box"><h4>Exchange Rate</h4><div class="kpi-value">{{ fx_rate }}</div></div>
+                <div class="kpi-box"><h4>Yesterday</h4><div class="kpi-value">{{ yesterday_price }}</div></div>
+                <div class="kpi-box"><h4>% Change</h4><div class="kpi-change"><i class="fas {{ arrow }}" style="color: {{ arrow_color }};"></i><span>{{ percentage_change }}</span></div></div>
+                <div class="kpi-box"><h4>Annual Price Range</h4><div class="kpi-value">Lowest: {{ annual_range_low }}<br>Highest: {{ annual_range_high }}</div></div>
+            </div>
+            <div id="chart-container" style="width:100%; height:600px; margin-top: 20px;"></div>
+        </div>
+        
+        <div class="tab-pane fade" id="pills-markets" role="tabpanel">
+            <h4>Markets and Commentary</h4>
+            <p>Content for this section will be available soon.</p>
+        </div>
+        
+        <div class="tab-pane fade" id="pills-trade" role="tabpanel">
+            <h4>Trade</h4>
+            <p>Content for this section will be available soon.</p>
+        </div>
+    </div>
+
+    <button class="fab" data-toggle="modal" data-target="#supportModal"><i class="fas fa-question"></i></button>
+
+    <div class="footer-container">
+        <h4 style="color: #4CAF50; font-weight: bold;">About Us</h4>
+        <h5>SugarQube is a sugar market surveillance tool for sugar producers, traders, banks and all stakeholders within East Africa. The visualised data has been collected over a period of 10 years by our own team. Kindly contact us on +254716475161 for inquiries.</h5>
+    </div>
+</main>
+
+
+<div class="modal fade" id="supportModal" tabindex="-1" role="dialog">
+  <div class="modal-dialog" role="document">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h5 class="modal-title">Submit a Support Ticket</h5>
+        <button type="button" class="close" data-dismiss="modal" aria-label="Close">
+          <span aria-hidden="true">&times;</span>
+        </button>
+      </div>
+      <form action="{% url 'submit_support_ticket' %}" method="post">
+          {% csrf_token %}
+          <div class="modal-body">
+              <p>Having trouble? Fill out the form below and we'll get back to you.</p>
+              <input type="text" name="subject" class="form-control" placeholder="Subject" required>
+              <br>
+              <textarea name="description" class="form-control" placeholder="Description" rows="5" required></textarea>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-success">Submit Ticket</button>
+          </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
 
 {% block javascript %}
 <script>
-  document.addEventListener('DOMContentLoaded', function () {
-      fetch("{% url 'sugar-price-data' %}")
-          .then(response => response.json())
-          .then(data => {
-              Highcharts.chart('chart-container', {
-                  chart: { type: 'line' },
-                  title: { text: 'Sugar Prices' },
-                  xAxis: { type: 'datetime', title: { text: 'Date' } },
-                  yAxis: { title: { text: 'Price' } },
-                  series: [{
-                      name: 'Average Sugar Price',
-                      data: data
-                  }]
-              });
-          });
-  });
+document.addEventListener('DOMContentLoaded', function () {
+    const chartData = {{ chart_data_json|safe }};
+
+    if (!chartData || chartData.length === 0) {
+        document.getElementById('chart-container').innerHTML = '<p style="text-align: center;">No chart data available.</p>';
+        return;
+    }
+
+    // Fully detailed chart configuration, matching the R Shiny app
+    Highcharts.stockChart('chart-container', {
+        chart: {
+            backgroundColor: '#ededed',
+            style: {
+                fontFamily: 'Roboto, sans-serif'
+            }
+        },
+        colors: ["#4CAF50"],
+        rangeSelector: {
+            selected: 6, // Defaults to "All"
+            buttonTheme: {
+                fill: '#ededed',
+                style: { fontSize: '15px' },
+                states: {
+                    hover: { fill: '#e7e7e7', style: { color: '#4CAF50' } },
+                    select: { fill: '#4CAF50', style: { color: '#ededed' } }
+                }
+            },
+            inputStyle: { fontSize: '15px' }
+        },
+        title: { text: '' },
+        xAxis: {
+            type: 'datetime',
+            crosshair: {
+                width: 0.3,
+                color: '#2b2b2b',
+                dashStyle: 'Solid'
+            },
+            gridLineWidth: 1,
+            gridLineColor: '#ffffff',
+            tickAmount: 4
+        },
+        yAxis: {
+            title: { text: '' },
+            labels: {
+                format: 'KES {value:,.0f}',
+                style: { fontSize: '13px' }
+            },
+            gridLineWidth: 1,
+            gridLineColor: '#ffffff',
+            tickAmount: 4
+        },
+        tooltip: {
+            pointFormat: '<span style="color:{series.color}">\u25CF</span> {series.name}: <b>KES {point.y:,.2f}</b><br/>',
+            shared: true,
+            xDateFormat: '%A, %b %e, %Y',
+            style: { fontSize: '14px' }
+        },
+        plotOptions: {
+            series: {
+                marker: {
+                    enabled: false,
+                    states: {
+                        hover: { enabled: true, radius: 5 }
+                    }
+                },
+                states: {
+                    hover: { halo: { size: 5 } }
+                }
+            }
+        },
+        series: [{
+            name: 'Average Sugar Price',
+            data: chartData,
+            type: 'line'
+        }],
+        exporting: {
+            enabled: true,
+            filename: 'Sugar_Prices_Nairobi'
+        },
+        credits: { enabled: false }
+    });
+});
 </script>
 {% endblock %}

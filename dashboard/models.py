@@ -33,3 +33,25 @@ class UploadHistory(models.Model):
     
     class Meta:
         db_table = 'credentials"."uploadhistory'
+        
+class SupportTicket(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    username = models.CharField(max_length=150)
+    email = models.EmailField()
+    subject = models.CharField(max_length=255)
+    description = models.TextField()
+    status = models.CharField(max_length=20, default='Open')
+    
+    class Meta:
+        db_table = 'credentials"."supportticket'
+        
+class Log(models.Model):
+    timestamp = models.DateTimeField(auto_now_add=True)
+    session = models.CharField(max_length=255, null=True, blank=True)
+    direction = models.CharField(max_length=50)
+    type = models.CharField(max_length=50)
+    note = models.TextField()
+    role = models.CharField(max_length=50)
+    
+    class Meta:
+        db_table = 'credentials"."log'
